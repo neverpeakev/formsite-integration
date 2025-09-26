@@ -1,8 +1,9 @@
 {
   "name": "formsite-integration",
-  "type": "module", 
+  "type": "module",
   "scripts": {
-    "start": "node supabase-to-formsite-integration.js"
+    "start": "node supabase-to-formsite-integration.js",
+    "postinstall": "npx playwright install chromium"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
