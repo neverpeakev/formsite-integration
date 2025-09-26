@@ -1,0 +1,11 @@
+{
+  "name": "formsite-integration",
+  "type": "module",
+  "scripts": {
+    "start": "node supabase-to-formsite-integration.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "puppeteer": "^21.0.0"
+  }
+}
