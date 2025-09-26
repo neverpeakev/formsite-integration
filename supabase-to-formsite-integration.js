@@ -39,18 +39,16 @@ function mapProcedureToSpecialty(procedure) {
 async function submitToFormsite(leadData) {
   console.log('📝 Submitting lead:', leadData.email)
   
-  const browser = await chromium.launch({ 
-    headless: true
-  })
+  let browser = null
   
   try {
+    browser = await chromium.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+    
     const page = await browser.newPage()
-  
-  try {
-    const page = await browser.newPage()
-    await page.setViewport({ width: 1280, height: 800 })
-    await page.goto(FORM_URL, { waitUntil: 'networkidle2' })
-    await page.waitForSelector('form', { timeout: 15000 })
+    await page.goto(FORM_URL, { waitUntil: 'networkidle' })
     await page.waitForTimeout(2000)
     
     // Fill fields
@@ -83,7 +81,11 @@ async function submitToFormsite(leadData) {
     
     // Set specialty dropdown
     const specialty = mapProcedureToSpecialty(leadData.procedure_interests)
-    await page.select('select', specialty).catch(() => {})
+    try {
+      await page.selectOption('select', specialty)
+    } catch (e) {
+      console.log('Could not set specialty dropdown')
+    }
     
     // Submit
     await page.evaluate(() => {
@@ -92,7 +94,7 @@ async function submitToFormsite(leadData) {
       else document.querySelector('form')?.submit()
     })
     
-    await page.waitForNavigation({ timeout: 10000 }).catch(() => {})
+    await page.waitForTimeout(3000)
     console.log('✅ Success:', leadData.email)
     return { success: true }
     
@@ -100,7 +102,9 @@ async function submitToFormsite(leadData) {
     console.error('❌ Error:', error.message)
     return { success: false, error: error.message }
   } finally {
-    await browser.close()
+    if (browser) {
+      await browser.close()
+    }
   }
 }
 
@@ -142,7 +146,17 @@ async function main() {
   console.log('💚 Running!')
   
   // Keep alive
-  setInterval(() => console.log('❤️ Alive'), 300000)
+  setInterval(() => {
+    console.log('❤️ Alive at ' + new Date().toISOString())
+  }, 300000) // Every 5 minutes
 }
 
-main().catch(console.error)
+main().catch(error => {
+  console.error('Fatal error:', error)
+  process.exit(1)
+})
+
+process.on('SIGINT', () => {
+  console.log('\n👋 Shutting down...')
+  process.exit(0)
+})
