@@ -3,13 +3,13 @@ builder = "nixpacks"
 
 [build.nixpacksConfig]
 aptPkgs = [
-  "libglib2.0-0",
+  "libglib2.0-0t64",
   "libnspr4",
   "libnss3",
   "libdbus-1-3",
-  "libatk1.0-0",
-  "libatk-bridge2.0-0",
-  "libatspi2.0-0",
+  "libatk1.0-0t64",
+  "libatk-bridge2.0-0t64",
+  "libatspi2.0-0t64",
   "libx11-6",
   "libxcomposite1",
   "libxdamage1",
@@ -19,7 +19,7 @@ aptPkgs = [
   "libgbm1",
   "libxcb1",
   "libxkbcommon0",
-  "libasound2",
+  "libasound2t64",
   "libxss1",
   "libgtk-3-0",
   "libpangocairo-1.0-0",
