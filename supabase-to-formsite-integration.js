@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import puppeteer from 'puppeteer-core'
+import puppeteer from 'puppeteer'
 
 const SUPABASE_URL = 'https://uoosrrsiywklrjdhfyhi.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvb3NycnNpeXdrbHJqZGhmeWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcxMDEwNDIsImV4cCI6MjA1MjY3NzA0Mn0.Qu3zcDreG_8qAMUzKqYTRNaYsf1MuWyyJ6hhEuUtUzU'
@@ -41,15 +41,13 @@ async function submitToFormsite(leadData) {
   
  const browser = await puppeteer.launch({ 
   headless: true,
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium' || '/usr/bin/google-chrome-stable' || '/usr/bin/google-chrome',
   args: [
-    '--no-sandbox', 
-    '--disable-setuid-sandbox',
+    '--no-sandbox',
+    '--disable-setuid-sandbox', 
     '--disable-dev-shm-usage',
     '--disable-gpu',
     '--no-first-run',
-    '--no-zygote',
-    '--single-process'
+    '--no-zygote'
   ]
 })
   
