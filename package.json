@@ -6,6 +6,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "puppeteer": "^21.0.0"
+    "puppeteer-core": "^21.0.0"
   }
 }
