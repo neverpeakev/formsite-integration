@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import puppeteer from 'puppeteer'
+import { chromium } from 'playwright-chromium'
 
 const SUPABASE_URL = 'https://uoosrrsiywklrjdhfyhi.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvb3NycnNpeXdrbHJqZGhmeWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcxMDEwNDIsImV4cCI6MjA1MjY3NzA0Mn0.Qu3zcDreG_8qAMUzKqYTRNaYsf1MuWyyJ6hhEuUtUzU'
@@ -39,17 +39,12 @@ function mapProcedureToSpecialty(procedure) {
 async function submitToFormsite(leadData) {
   console.log('📝 Submitting lead:', leadData.email)
   
- const browser = await puppeteer.launch({ 
-  headless: true,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox', 
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--no-first-run',
-    '--no-zygote'
-  ]
-})
+  const browser = await chromium.launch({ 
+    headless: true
+  })
+  
+  try {
+    const page = await browser.newPage()
   
   try {
     const page = await browser.newPage()
