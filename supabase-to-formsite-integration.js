@@ -12,18 +12,33 @@ const processedLeads = new Set()
 
 function mapProcedureToSpecialty(procedure) {
   const specialtyMap = {
+    // Map form values (with hyphens) to Formsite dropdown text
+    'mommy-makeover': 'Mommy Makeover',
+    'body-contouring': 'Body Contouring After Weight Loss',
+    'tummy-tuck': 'Tummy Tuck',
+    'liposuction': 'Liposuction',
+    'brazilian-butt-lift': 'Brazilian Butt Lift',
+    'bbl': 'Brazilian Butt Lift',
+    'breast-augmentation': 'Breast Augmentation',
+    'breast-lift': 'Breast Lift',
+    'breast-reduction': 'Breast Reduction',
+    'arm-lift': 'Arm Lift',
+    'thigh-lift': 'Thigh Lift',
+    'rhinoplasty': 'Rhinoplasty',
+    'eyelid-surgery': 'Eyelid Surgery',
+    'face-lift': 'Face Lift',
+    'hair-transplant': 'Hair Transplant',
+    'transgender-surgery': 'Transgender Surgery',
+    // Include underscore versions just in case
     'mommy_makeover': 'Mommy Makeover',
     'body_contouring': 'Body Contouring After Weight Loss',
     'tummy_tuck': 'Tummy Tuck',
-    'liposuction': 'Liposuction',
-    'bbl': 'Brazilian Butt Lift',
     'brazilian_butt_lift': 'Brazilian Butt Lift',
     'breast_augmentation': 'Breast Augmentation',
     'breast_lift': 'Breast Lift',
     'breast_reduction': 'Breast Reduction',
     'arm_lift': 'Arm Lift',
     'thigh_lift': 'Thigh Lift',
-    'rhinoplasty': 'Rhinoplasty',
     'eyelid_surgery': 'Eyelid Surgery',
     'face_lift': 'Face Lift',
     'hair_transplant': 'Hair Transplant',
@@ -31,11 +46,15 @@ function mapProcedureToSpecialty(procedure) {
   }
   
   if (procedure && typeof procedure === 'string') {
-    const lowerProc = procedure.toLowerCase()
-    for (const [key, value] of Object.entries(specialtyMap)) {
-      if (lowerProc.includes(key)) return value
+    const lowerProc = procedure.toLowerCase().trim()
+    // Direct match
+    if (specialtyMap[lowerProc]) {
+      return specialtyMap[lowerProc]
     }
   }
+  
+  // Default to Mommy Makeover if no match
+  console.log(`Warning: No mapping found for procedure: ${procedure}`)
   return 'Mommy Makeover'
 }
 
