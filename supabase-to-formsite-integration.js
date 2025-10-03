@@ -7,6 +7,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const FORM_URL = 'https://fs29.formsite.com/res/showFormEmbed?EParam=m_OmK8apOTAKaBL53IMiRtlARFv6bfoFFzpUCZwnDno'
 
+// Track processed leads to avoid duplicates
+const processedLeads = new Set()
+
 function mapProcedureToSpecialty(procedure) {
   const specialtyMap = {
     'mommy_makeover': 'Mommy Makeover',
@@ -37,6 +40,12 @@ function mapProcedureToSpecialty(procedure) {
 }
 
 async function submitToFormsite(leadData) {
+  // Skip if already processed
+  if (processedLeads.has(leadData.id)) {
+    console.log('⏭️ Already processed:', leadData.email)
+    return { success: true, skipped: true }
+  }
+  
   console.log('📝 Submitting lead:', leadData.email)
   
   let browser = null
@@ -79,12 +88,34 @@ async function submitToFormsite(leadData) {
       if (checkbox && !checkbox.checked) checkbox.click()
     }, leadData)
     
-    // Set specialty dropdown
+    // Set specialty dropdown - improved version
     const specialty = mapProcedureToSpecialty(leadData.procedure_interests)
     try {
-      await page.selectOption('select', specialty)
+      const dropdownSet = await page.evaluate((specialtyValue) => {
+        let select = document.querySelector('select[name*="Specialty"]')
+        if (!select) select = document.querySelector('select[aria-label*="Specialty"]')
+        if (!select) select = document.querySelector('select#Specialty')
+        if (!select) select = document.querySelector('select')
+        
+        if (select) {
+          const options = select.querySelectorAll('option')
+          for (const option of options) {
+            if (option.textContent.trim() === specialtyValue) {
+              select.value = option.value
+              select.dispatchEvent(new Event('change', { bubbles: true }))
+              return true
+            }
+          }
+        }
+        return false
+      }, specialty)
+      
+      if (!dropdownSet) {
+        console.log(`Could not set specialty dropdown to: ${specialty}`)
+        console.log(`Original procedure interest: ${leadData.procedure_interests}`)
+      }
     } catch (e) {
-      console.log('Could not set specialty dropdown')
+      console.log('Error with specialty dropdown:', e.message)
     }
     
     // Submit
@@ -96,6 +127,20 @@ async function submitToFormsite(leadData) {
     
     await page.waitForTimeout(3000)
     console.log('✅ Success:', leadData.email)
+    
+    // Mark as processed
+    processedLeads.add(leadData.id)
+    
+    // Update database if column exists
+    try {
+      await supabase
+        .from('consultation_requests')
+        .update({ submitted_to_formsite: true })
+        .eq('id', leadData.id)
+    } catch (e) {
+      // Column might not exist, that's okay
+    }
+    
     return { success: true }
     
   } catch (error) {
@@ -126,17 +171,45 @@ async function processExistingLeads() {
 }
 
 async function startRealtimeListener() {
-  console.log('👂 Listening for new leads...')
-  supabase
-    .channel('consultation-requests')
-    .on('postgres_changes', 
-      { event: 'INSERT', schema: 'public', table: 'consultation_requests' },
+  console.log('👂 Setting up real-time listener...')
+  
+  // Subscribe to INSERT events
+  const channel = supabase
+    .channel('db-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'consultation_requests'
+      },
       async (payload) => {
-        console.log('📥 New lead:', payload.new.email)
+        console.log('🔔 New lead detected via realtime:', payload.new.email)
         await submitToFormsite(payload.new)
       }
     )
-    .subscribe()
+    .subscribe((status) => {
+      console.log('📡 Realtime subscription status:', status)
+    })
+
+  // Also add polling as backup (checks every 30 seconds)
+  setInterval(async () => {
+    const { data } = await supabase
+      .from('consultation_requests')
+      .select('*')
+      .gt('created_at', new Date(Date.now() - 120000).toISOString()) // Last 2 minutes
+      .order('created_at', { desc: true })
+      .limit(5)
+    
+    if (data?.length) {
+      for (const lead of data) {
+        if (!processedLeads.has(lead.id)) {
+          console.log('🔍 Found new lead via polling:', lead.email)
+          await submitToFormsite(lead)
+        }
+      }
+    }
+  }, 30000) // Check every 30 seconds
 }
 
 async function main() {
@@ -145,7 +218,7 @@ async function main() {
   await startRealtimeListener()
   console.log('💚 Running!')
   
-  // Keep alive
+  // Keep alive heartbeat
   setInterval(() => {
     console.log('❤️ Alive at ' + new Date().toISOString())
   }, 300000) // Every 5 minutes
