@@ -1,12 +1,11 @@
 {
-  "name": "formsite-integration",
+  "name": "salesforce-integration",
   "type": "module",
   "scripts": {
-    "start": "node supabase-to-formsite-integration.js",
-    "postinstall": "npx playwright install chromium"
+    "start": "node supabase-to-salesforce-integration.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "playwright-chromium": "^1.40.0"
+    "jsforce": "^2.0.0"
   }
 }
