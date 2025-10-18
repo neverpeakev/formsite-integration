@@ -6,6 +6,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "jsforce": "^2.0.0"
+    "jsforce": "^1.11.3"
   }
 }
